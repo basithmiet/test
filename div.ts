@@ -54,3 +54,86 @@ export class DatepickerComponent implements AfterViewInit {
   }, 100);
 }
 
+
+
+  ////////////////////////////
+  ///////New code////////////
+  ///////////////////////////
+
+
+  import { Component, AfterViewInit, OnDestroy } from '@angular/core';
+import * as $ from 'jquery';
+import 'jquery-ui/ui/widgets/datepicker';
+
+@Component({
+  selector: 'app-datepicker',
+  template: `
+    <div *ngIf="showDatepicker">
+      <input type="text" class="date-field" placeholder="Select a date">
+    </div>
+    <button (click)="toggleDatepicker()">Toggle Datepicker</button>
+  `,
+  styles: [`
+    .date-field {
+      width: 200px;
+      padding: 8px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+  `]
+})
+export class DatepickerComponent implements AfterViewInit, OnDestroy {
+  showDatepicker = true;
+  private observer: MutationObserver | null = null;
+
+  ngAfterViewInit() {
+    this.initDatePickers();
+    this.observeDOMChanges();
+  }
+
+  private initDatePickers() {
+    setTimeout(() => {
+      $('.date-field').each(function (this: HTMLElement) {
+        const input = $(this);
+        if (!input.data('datepicker')) { // Prevent duplicate initialization
+          input.datepicker({
+            dateFormat: "mm/dd/yy",
+            appendTo: "body",
+            beforeShow: function (inputElement: any, inst: any) {
+              setTimeout(() => {
+                inst.dpDiv.css({
+                  top: $(inputElement).offset().top + $(inputElement).outerHeight(),
+                  left: $(inputElement).offset().left
+                });
+              }, 0);
+            }
+          });
+        }
+      });
+    }, 100);
+  }
+
+  private observeDOMChanges() {
+    const config = { childList: true, subtree: true };
+    this.observer = new MutationObserver(() => this.initDatePickers());
+
+    const targetNode = document.body;
+    if (targetNode) {
+      this.observer.observe(targetNode, config);
+    }
+  }
+
+  toggleDatepicker() {
+    this.showDatepicker = !this.showDatepicker;
+    setTimeout(() => this.initDatePickers(), 100);
+  }
+
+  ngOnDestroy() {
+    if (this.observer) {
+      this.observer.disconnect();
+    }
+  }
+}
+
+
