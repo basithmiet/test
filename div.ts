@@ -30,24 +30,27 @@ export class DatepickerComponent implements AfterViewInit {
     setTimeout(() => this.initDatePickers(), 100); // Ensure DOM update
   }
 
-  private initDatePickers() {
-    setTimeout(() => {
-      $('.date-field').each(function () {
-        if (!$(this).data('datepicker')) { // Prevent duplicate initialization
-          $(this).datepicker({
-            dateFormat: "mm/dd/yy",
-            appendTo: "body",
-            beforeShow: function (input: any, inst: any) {
-              setTimeout(() => {
-                inst.dpDiv.css({
-                  top: $(input).offset().top + $(input).outerHeight(),
-                  left: $(input).offset().left
-                });
-              }, 0);
-            }
-          });
-        }
-      });
-    }, 100);
-  }
+ private initDatePickers() {
+  setTimeout(() => {
+    const dateFields = $('.date-field');
+    if (dateFields.length === 0) return; // Exit if no date fields exist
+
+    dateFields.each(function () {
+      if (!$(this).data('datepicker')) { // Prevent duplicate initialization
+        $(this).datepicker({
+          dateFormat: "mm/dd/yy",
+          appendTo: "body",
+          beforeShow: function (input: any, inst: any) {
+            setTimeout(() => {
+              inst.dpDiv.css({
+                top: $(input).offset().top + $(input).outerHeight(),
+                left: $(input).offset().left
+              });
+            }, 0);
+          }
+        });
+      }
+    });
+  }, 100);
 }
+
