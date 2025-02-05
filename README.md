@@ -1,10 +1,27 @@
- resetIdleTimer() {
-    console.log('User activity detected. Resetting idle timer.');
-    this.bnIdle.resetTimer(); // Reset the idle timer when the user interacts
-    this.startIdleWatcher(); // Restart watcher to ensure it continues detecting inactivity
-  }
-
-
-  document.addEventListener('mousemove', () => this.resetIdleTimer());
-document.addEventListener('keydown', () => this.resetIdleTimer());
-document.addEventListener('click', () => this.resetIdleTimer());
+addDatePicker() {
+  setTimeout(() => {
+    var self = this;    
+    (function () {
+      var elements = document.getElementsByClassName('date-field');
+      console.log(elements);
+      if (elements && elements.length > 0) {
+        for (var i = 0; i < elements.length; i++) {
+          var id = elements[i].id; // Get the ID correctly
+          $('#' + id).datepicker({
+            dateFormat: "mm/dd/yy",
+            appendTo: "body"
+          });
+          $('#' + id).datepicker('setDate', ''); // Corrected method
+          $("body").on("change", "#" + id, function () {
+            console.log(id);
+            $('#' + id).trigger("click");
+          });
+          $('#' + id).on("change", function (dp) {
+            var value = dp.currentTarget.value;
+            console.log(id, value);
+          });
+        }
+      }
+    })();
+  });
+}
