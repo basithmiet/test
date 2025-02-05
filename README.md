@@ -1,3 +1,4 @@
+`
 addDatePicker() {
   setTimeout(() => {
     var self = this;    
@@ -25,3 +26,4 @@ addDatePicker() {
     })();
   });
 }
+`
