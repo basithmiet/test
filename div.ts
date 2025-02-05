@@ -136,4 +136,29 @@ export class DatepickerComponent implements AfterViewInit, OnDestroy {
   }
 }
 
+/////////////
+
+
+$('.date-field').datepicker({
+  dateFormat: "mm/dd/yy",
+  appendTo: "body",
+  onSelect: function (dateText, inst) {
+    inst.input[0].dispatchEvent(new Event('input', { bubbles: true })); 
+    $(this).datepicker("hide"); 
+    return false;
+  }
+});
+
+// ✅ Hide on Focus Out
+$('.date-field').on('blur', function () {
+  $(this).datepicker("hide");
+});
+
+// ✅ Prevent Unwanted Click Events
+$('.date-field').on('click', function (event) {
+  event.stopPropagation();
+  event.preventDefault();
+});
+
+
 
