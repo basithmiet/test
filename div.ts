@@ -1,164 +1,40 @@
-import { Component, AfterViewInit, ViewChildren, QueryList, ElementRef, Renderer2 } from '@angular/core';
-declare var $: any; // Declare jQuery
+Yes, the <base href="/"> in your index.html could be causing the 404 Not Found error, especially if your application is not at the root of the IIS site.
 
-@Component({
-  selector: 'app-datepicker',
-  templateUrl: './datepicker.component.html',
-  styleUrls: ['./datepicker.component.css']
-})
-export class DatepickerComponent implements AfterViewInit {
-  @ViewChildren('date-field') dateInputs!: QueryList<ElementRef>;
-  dateFields: any[] = [{ id: 1 }]; // Initial date field
-  
-  private observer: MutationObserver;
+Here’s what you should check and try:
+	1.	Confirm URL Rewrite Module is Installed and Enabled
+Ensure that the IIS Rewrite Module is correctly installed and enabled. You can check this in IIS Manager under Modules.
+	2.	Check Rewrite Rules
+	•	If you’re using a rewrite rule (e.g., for an SPA like Angular or React), ensure it correctly rewrites requests to index.html.
+	•	A common rewrite rule for SPAs looks like this in web.config:
 
-  constructor(private renderer: Renderer2) {
-    // Observe DOM changes when new elements are added dynamically
-    this.observer = new MutationObserver(() => this.initDatePickers());
-  }
+<configuration>
+  <system.webServer>
+    <rewrite>
+      <rules>
+        <rule name="Rewrite to index.html" stopProcessing="true">
+          <match url=".*" />
+          <conditions logicalGrouping="MatchAll">
+            <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+            <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
+          </conditions>
+          <action type="Rewrite" url="/index.html" />
+        </rule>
+      </rules>
+    </rewrite>
+  </system.webServer>
+</configuration>
 
-  ngAfterViewInit() {
-    this.initDatePickers();
 
-    // Observe changes in the document for dynamically added elements
-    const config = { childList: true, subtree: true };
-    this.observer.observe(document.body, config);
-  }
+	3.	Adjust <base href="/">
+	•	If your app is hosted in a subdirectory (e.g., http://example.com/myapp/), then <base href="/"> will cause incorrect routing.
+	•	Change <base href="/"> to match your application path, e.g., <base href="/myapp/">.
+	4.	Ensure Static File Serving is Enabled
+	•	If index.html itself is not being found, check that Static Content is enabled in IIS Features.
+	5.	Restart IIS
+After making changes, restart IIS using:
 
-  addField() {
-    this.dateFields.push({ id: this.dateFields.length + 1 });
-    setTimeout(() => this.initDatePickers(), 100); // Ensure DOM update
-  }
-
- private initDatePickers() {
-  setTimeout(() => {
-    const dateFields = $('.date-field');
-    if (dateFields.length === 0) return; // Exit if no date fields exist
-
-    dateFields.each(function () {
-      if (!$(this).data('datepicker')) { // Prevent duplicate initialization
-        $(this).datepicker({
-          dateFormat: "mm/dd/yy",
-          appendTo: "body",
-          beforeShow: function (input: any, inst: any) {
-            setTimeout(() => {
-              inst.dpDiv.css({
-                top: $(input).offset().top + $(input).outerHeight(),
-                left: $(input).offset().left
-              });
-            }, 0);
-          }
-        });
-      }
-    });
-  }, 100);
-}
+iisreset
 
 
 
-  ////////////////////////////
-  ///////New code////////////
-  ///////////////////////////
-
-
-  import { Component, AfterViewInit, OnDestroy } from '@angular/core';
-import * as $ from 'jquery';
-import 'jquery-ui/ui/widgets/datepicker';
-
-@Component({
-  selector: 'app-datepicker',
-  template: `
-    <div *ngIf="showDatepicker">
-      <input type="text" class="date-field" placeholder="Select a date">
-    </div>
-    <button (click)="toggleDatepicker()">Toggle Datepicker</button>
-  `,
-  styles: [`
-    .date-field {
-      width: 200px;
-      padding: 8px;
-      margin: 10px 0;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-  `]
-})
-export class DatepickerComponent implements AfterViewInit, OnDestroy {
-  showDatepicker = true;
-  private observer: MutationObserver | null = null;
-
-  ngAfterViewInit() {
-    this.initDatePickers();
-    this.observeDOMChanges();
-  }
-
-  private initDatePickers() {
-    setTimeout(() => {
-      $('.date-field').each(function (this: HTMLElement) {
-        const input = $(this);
-        if (!input.data('datepicker')) { // Prevent duplicate initialization
-          input.datepicker({
-            dateFormat: "mm/dd/yy",
-            appendTo: "body",
-            beforeShow: function (inputElement: any, inst: any) {
-              setTimeout(() => {
-                inst.dpDiv.css({
-                  top: $(inputElement).offset().top + $(inputElement).outerHeight(),
-                  left: $(inputElement).offset().left
-                });
-              }, 0);
-            }
-          });
-        }
-      });
-    }, 100);
-  }
-
-  private observeDOMChanges() {
-    const config = { childList: true, subtree: true };
-    this.observer = new MutationObserver(() => this.initDatePickers());
-
-    const targetNode = document.body;
-    if (targetNode) {
-      this.observer.observe(targetNode, config);
-    }
-  }
-
-  toggleDatepicker() {
-    this.showDatepicker = !this.showDatepicker;
-    setTimeout(() => this.initDatePickers(), 100);
-  }
-
-  ngOnDestroy() {
-    if (this.observer) {
-      this.observer.disconnect();
-    }
-  }
-}
-
-/////////////
-
-
-$('.date-field').datepicker({
-  dateFormat: "mm/dd/yy",
-  appendTo: "body",
-  onSelect: function (dateText, inst) {
-    inst.input[0].dispatchEvent(new Event('input', { bubbles: true })); 
-    $(this).datepicker("hide"); 
-    return false;
-  }
-});
-
-// ✅ Hide on Focus Out
-$('.date-field').on('blur', function () {
-  $(this).datepicker("hide");
-});
-
-// ✅ Prevent Unwanted Click Events
-$('.date-field').on('click', function (event) {
-  event.stopPropagation();
-  event.preventDefault();
-});
-
-
-
+Try these steps and let me know if the issue persists.
